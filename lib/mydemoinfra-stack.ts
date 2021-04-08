@@ -7,7 +7,9 @@ import * as origins from '@aws-cdk/aws-cloudfront-origins';
 import * as cdk from '@aws-cdk/core';
 
 export class MydemoinfraStack extends cdk.Stack {
-  constructor(scope: cdk.App, id: string, props?: cdk.StackProps) {
+  public readonly urlOutput: cdk.CfnOutput;
+
+  constructor(scope: cdk.Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
 
     // ECR repository
@@ -37,7 +39,7 @@ export class MydemoinfraStack extends cdk.Stack {
       defaultRootObject: 'index.php'
     });
 
-    new cdk.CfnOutput(this, 'DistributionDomainName', {
+    this.urlOutput = new cdk.CfnOutput(this, 'DistributionDomainName', {
       value: distribution.domainName
     });
   }
