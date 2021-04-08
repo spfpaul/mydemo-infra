@@ -2,7 +2,7 @@ import * as codepipeline from '@aws-cdk/aws-codepipeline';
 import * as codepipeline_actions from '@aws-cdk/aws-codepipeline-actions';
 import * as cdk from '@aws-cdk/core';
 import { MydemoinfraStage } from './mydemoinfra-stage';
-import { CdkPipeline, SimpleSynthAction } from "@aws-cdk/pipelines";
+import { ShellScriptAction, CdkPipeline, SimpleSynthAction } from "@aws-cdk/pipelines";
 
 /**
  * The stack that defines the application pipeline
@@ -32,12 +32,24 @@ export class MydemoInfraPipelineStack extends cdk.Stack {
        synthAction: SimpleSynthAction.standardNpmSynth({
          sourceArtifact,
          cloudAssemblyArtifact,
-         buildCommand: 'npm run build'
+         // buildCommand: 'npm run build'
        }),
     });
 
     // This is where we add the application stages
     const deploy = new MydemoinfraStage(this, 'Deploy');
-    pipeline.addApplicationStage(deploy);
+    const deployStage = pipeline.addApplicationStage(deploy);
+    deployStage.addActions(new ShellScriptAction({
+      actionName: 'TestService',
+      useOutputs: {
+        // Get the stack Output from the Stage and make it available in
+        // the shell script as $ENDPOINT_URL.
+        ENDPOINT_URL: pipeline.stackOutput(deploy.urlOutput),
+      },
+      commands: [
+        // Use 'curl' to GET the given URL and fail if it returns an error
+        'curl -Ssf $ENDPOINT_URL',
+      ],
+    }));
   }
 }
